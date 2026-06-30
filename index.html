@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Co-Learning Assistant - AI対話型学習伴走パートナー</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- PDF.js Library (PDF解析用) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="dark-theme">
+  <div id="app">
+    <!-- 背景の光るエフェクト -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-accent">Interactive</span> Co-Learning Assistant
+      </div>
+      <div class="header-actions">
+        <!-- 言語切り替えボタン -->
+        <button id="btn-lang" class="btn btn-secondary btn-icon">
+          <span class="icon">🇯🇵</span> JP / EN
+        </button>
+        <!-- 最初に戻るボタン -->
+        <button id="btn-reset" class="btn btn-secondary btn-icon" style="display: none;">
+          <span class="icon">🔄</span> <span id="lbl-reset-text">最初に戻る</span>
+        </button>
+        <!-- APIキー設定ボタン -->
+        <button id="btn-api-key" class="btn btn-secondary btn-icon">
+          <span class="icon">🔑</span> <span id="lbl-api-key-text">APIキー設定</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="app-main">
+      <!-- 初期セットアップ画面 (ファイルアップロード / テキストペースト) -->
+      <section id="setup-view" class="view-panel active">
+        <div class="setup-card">
+          <h2 id="lbl-setup-title">学習ドキュメントのアップロード</h2>
+          <p class="subtitle" id="lbl-setup-subtitle">対話型学習を開始するため、学習したいテキストまたはMarkdownファイルを読み込ませてください。</p>
+
+          <div class="drop-zone" id="drop-zone">
+            <span class="drop-zone-icon">📄</span>
+            <span class="drop-zone-text" id="lbl-drop-zone-text">ファイルをドラッグ＆ドロップするか、クリックして選択</span>
+            <span class="drop-zone-sub" id="lbl-drop-zone-sub">対応フォーマット: .txt, .md, .pdf</span>
+            <input type="file" id="file-input" accept=".txt,.md,.pdf" style="display: none;">
+          </div>
+
+
+
+          <div class="divider">
+            <span id="lbl-divider-text">または</span>
+          </div>
+
+          <div class="paste-zone">
+            <label for="text-paste" id="lbl-paste-label">テキストを直接ペーストする</label>
+            <textarea id="text-paste" placeholder="ここに学習したい文章を貼り付けてください..."></textarea>
+          </div>
+
+          <button id="btn-start-learning" class="btn btn-primary btn-large">
+            学習を開始する
+          </button>
+        </div>
+      </section>
+
+      <!-- 学習・対話画面 (2ペイン構成) -->
+      <section id="learning-view" class="view-panel">
+        <div class="workspace-container">
+          <!-- 左ペイン: 学習＆対話 -->
+          <div id="left-pane" class="pane">
+            <div class="pane-header">
+              <div class="progress-container">
+                <span class="progress-label" id="lbl-progress-label">学習の進捗: </span>
+                <span id="progress-text">0 / 0 セクション</span>
+                <div class="progress-bar-bg">
+                  <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 現在のアクティブテキスト (折りたたみ式アコーディオン) -->
+            <details class="active-text-card" id="active-text-details">
+              <summary class="card-tag"><span id="lbl-card-tag">対象の学習セクション</span></summary>
+              <div id="active-text-content" class="active-text-content">
+                <!-- ここに現在セクションのテキストが表示されます -->
+              </div>
+            </details>
+
+            <!-- チャット履歴 -->
+            <div class="chat-history-container">
+              <div class="chat-history" id="chat-history">
+                <!-- ここにチャット履歴が表示されます -->
+              </div>
+            </div>
+
+            <!-- チャット入力とアクション -->
+            <div class="chat-input-area">
+              <div class="chat-input-row">
+                <textarea id="chat-input" placeholder="疑問に思ったこと、気づいたことを入力... (Ctrl + Enterで送信)"></textarea>
+                <button id="btn-send-message" class="btn btn-primary btn-square">
+                  <span class="icon">➡️</span>
+                </button>
+              </div>
+              <div class="action-row">
+                <button id="btn-agree" class="btn btn-success btn-large">
+                  <span class="icon">✅</span> <span id="lbl-agree-text">納得しました（次のセクションへ）</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右ペイン: 学習ノート -->
+          <div id="right-pane" class="pane">
+            <div class="pane-header">
+              <h3 id="lbl-notes-title">📝 Your Co-Learning Notes</h3>
+            </div>
+            <div class="notes-preview-container">
+              <div id="notes-preview" class="markdown-body">
+                <!-- ここに自動生成された学習ノートのMarkdownプレビューが表示されます -->
+                <p class="placeholder-text">学習が進むと、ここに対話から抽出された気づきが自動的に記録されます。</p>
+              </div>
+            </div>
+            <!-- ノートアクションエリア (フッター) -->
+            <div class="notes-action-area">
+              <button id="btn-download-notes" class="btn btn-primary btn-large">
+                📥 <span id="lbl-download-text">ダウンロード (.md)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- APIキー設定モーダル -->
+    <div id="api-key-modal" class="modal-overlay">
+      <div class="modal-card">
+        <h3 id="lbl-modal-title">Google Gemini API キーの設定</h3>
+        <p class="modal-desc" id="lbl-modal-desc">対話機能と超訳解説の生成にGoogle Gemini APIを使用します。キーはブラウザにのみ保存され、外部に送信されません。</p>
+        <div class="input-group">
+          <label for="api-key-input" id="lbl-api-key-label">Gemini API キー</label>
+          <input type="password" id="api-key-input" placeholder="AIzaSy...">
+        </div>
+        <div class="modal-actions">
+          <button id="btn-delete-key" class="btn btn-danger" style="display: none;">解除する</button>
+          <button id="btn-close-modal" class="btn btn-secondary">キャンセル</button>
+          <button id="btn-save-key" class="btn btn-primary">保存する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Entry Point -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
