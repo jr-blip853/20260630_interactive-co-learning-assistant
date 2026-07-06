@@ -79,7 +79,7 @@ Additionally, high-quality AI course materials like the "5-Day AI Agents" whitep
 │  └───────────┼──────────────────────────────────────────┘   │
 │              │                                              │
 │  ┌───────────▼──────────────────────────────────────────┐   │
-│  │          Gemini API (gemini-2.0-flash)               │   │
+│  │          Gemini API (gemini-2.5-flash)               │   │
 │  │  - System Instruction (JP/EN dynamic switching)      │   │
 │  │  - Explanation generation (small-step summary)       │   │
 │  │  - Chat Q&A with context                             │   │
@@ -91,7 +91,7 @@ Additionally, high-quality AI course materials like the "5-Day AI Agents" whitep
 **Key architectural decisions / 主な設計方針:**
 - **100% client-side** — no backend server required. All text parsing and API calls happen in the browser. / バックエンドサーバー不要。テキスト解析とAPI呼び出しはすべてブラウザ内で完結。
 - **API key stored in `localStorage`** — never sent to any third-party server. / APIキーはブラウザの`localStorage`にのみ保存。サードパーティサーバーには一切送信されません。
-- **Vite** as the build tool for fast HMR development and optimized production builds.
+- **Vite** as the build tool for fast HMR development and optimized production builds. / ビルドツールとして**Vite**を採用。高速なHMR開発と最適化されたプロダクションビルドを実現します。
 
 ---
 
@@ -107,14 +107,14 @@ The evaluation criteria require **at least 3 major concepts** — this project c
 ### ✅ 1. AI Agent / AIエージェント
 
 **[English]**
-The `Co-Learning Agent` is a conversational AI agent powered by the Gemini API (`gemini-2.0-flash`).
+The `Co-Learning Agent` is a conversational AI agent powered by the Gemini API (`gemini-2.5-flash`).
 It autonomously:
 - Generates plain-language summaries for each learning section (step-by-step explanation)
 - Responds to user questions in context-aware chat
 - Extracts and structures key insights via a `<notes>` tag protocol, rendered in the right pane in real time
 
 **[日本語]**
-`Co-Learning Agent` は、Gemini API（`gemini-2.0-flash`）を搭載した会話型AIエージェントです。
+`Co-Learning Agent` は、Gemini API（`gemini-2.5-flash`）を搭載した会話型AIエージェントです。
 自律的に以下を実行します：
 - 各学習セクションのわかりやすい超訳解説を自動生成
 - ユーザーの質問にコンテキストを保ちながら回答
