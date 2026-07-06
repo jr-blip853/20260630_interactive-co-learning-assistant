@@ -460,18 +460,15 @@ async function loadSection(index) {
 async function callGeminiAPI(prompt, history = []) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
   
-  const langPrompt = state.lang === 'jp' 
-    ? '解説、会話、および <notes> タグ内の記述はすべて【日本語】で行ってください。学習者には「You」または「あなた」と直接呼びかけてください。' 
-    : 'All explanations, dialogues, and notes inside the <notes> tag MUST be in 【English】. Address the learner as "You" directly.';
-
-  // システム命令を定義
-  const systemInstruction = `あなたは学習者（You）の咀嚼と深い学びを伴走するAIエージェント「Co-Learning Agent」です。
+  // システム命令を定義（日英で完全に切り分け）
+  const systemInstruction = state.lang === 'jp'
+    ? `あなたは学習者（You）の咀嚼と深い学びを伴走するAIエージェント「Co-Learning Agent」です。
 客観的かつ真摯に学習をサポートしてください。
-難解なドキュメントに対し、わかりやすい言葉を用いて噛み砕いて説明してください。無理にアナロジー（例え話）を使う必要はありません（アナロジーがかえって理解を妨げる場合があるため、正確で簡潔な説明を優先してください）。
-解説や返答の際は、単なる三人称の客観的説明ではなく、非エンジニアの「You」を主語に置き、Youのビジネスや実務においてどのような価値があるかを、Youに直接語りかけるトーンで対話してください。
+難解なドキュメントに対し、わかりやすい言葉を用いて噛み砕いて説明してください。無理にアナロジー（例え話）を使う必要はありません。
+解説や返答の際は、非エンジニアの「You」を主語に置き、Youのビジネスや実務においてどのような価値があるかを、Youに直接語りかけるトーンで対話してください。
 
 【言語ルール】
-${langPrompt}
+解説、会話、および <notes> タグ内の記述はすべて【日本語】で行ってください。学習者には「You」または「あなた」と直接呼びかけてください。
 
 【コンテキスト】
 あなたは現在、以下の「学習ドキュメント全体」に基づいた学習に伴走しています。各セクションの解説や質問への回答は、必ずこのドキュメント全体の文脈と定義に準拠し、ハルシネーション（誤った用語解説など）を起こさないように注意してください。
@@ -488,7 +485,31 @@ ${state.rawText}
 - [気づき1]
 - [気づき2]
 </notes>
-このタグは他のテキストとは分けて末尾に記述し、Youが発信した本質的な気づきだけを整理して記述してください。`;
+このタグは他のテキストとは分けて末尾に記述し、Youが発信した本質的な気づきだけを整理して記述してください。`
+    : `You are the AI partner "Co-Learning Agent" who assists the learner ("You") in digesting and deeply understanding the learning document.
+Please support the learning objectively and sincerely.
+Break down complex texts using plain and easy-to-understand language. Do not force analogies if they hinder accurate understanding; prioritize precise and concise explanations.
+When explaining or replying, do not use objective third-person descriptions. Put the non-engineer "You" as the subject, and discuss in a direct tone addressing how it values You's business or daily work.
+
+【Language Rule】
+All explanations, dialogues, and notes inside the <notes> tag MUST be in 【English】. Address the learner as "You" directly.
+
+【Context】
+You are currently accompanying the learning process based on the following "Entire Learning Document". Make sure all explanations and answers to questions conform strictly to the context and definitions of this entire document to avoid hallucination.
+
+# Entire Learning Document
+${state.rawText}
+
+【Note Generation Rule】
+Extract insights, agreements, and unique perspectives gained by the learner through the dialogue, and always output them at the very end of your response using the following XML-like tag format.
+These notes will be automatically merged into the "Learning Notes" on the right pane.
+Condense the insights to their essential points in a concise bulleted list (3-5 items, within 150 words total).
+Make sure to output the 【cumulative (full)】 insights gained from the entire active section's dialogue without omitting anything. Do not delete or simplify past insights as the dialogue progresses. However, organize and summarize duplicates or minor details to keep it clean.
+<notes>
+- [Insight 1]
+- [Insight 2]
+</notes>
+Place this tag separately at the end of your response, and only write the essential insights expressed by You.`;
 
   // 履歴を含めたコンテンツ構造の構築
   const contents = [];
@@ -540,7 +561,7 @@ function buildExplanationPrompt(sectionText) {
     return `こんにちは、Co-Learning Agentです。今回のセクションについて超訳解説します。
 
 以下の学習セクションテキストについて、非エンジニア of You向けに、わかりやすい言葉で非常にわかりやすく超訳・解説してください。無理にアナロジーを使用する必要はありません。
-解説のボリュームは、2分で読了できる【1000文字以内】（800〜1000文字の範囲）を厳守し、1000文字を超えないように徹底してください。
+解説のボリュームは、1分で読了できる【400〜500文字の範囲】を厳守し、絶対に500文字を超えないように徹底してください。
 
 【解説ルール】
 1. 冒頭は必ず「こんにちは、Co-Learning Agentです。」などの挨拶と自称から開始し、Youに直接語りかけてください。
@@ -552,7 +573,7 @@ ${sectionText}`;
     return `Hello! I'm Co-Learning Agent. I'll translate and explain this section for you.
 
 Please translate and explain the following learning section text in plain English for a non-engineer "You". Do not force analogies.
-The explanation volume must be within 【1000 words】 (approx. 600-800 words), keeping it concise and easy to understand. Do not exceed 1000 words.
+The explanation volume must be within 【150-200 words】 (compact and easy to read), keeping it concise and easy to understand. Do not exceed 250 words.
 
 【Explanation Rules】
 1. Start the response with a friendly greeting like "Hello, I'm Co-Learning Agent. Let's look into this section." and address the reader as "You".
@@ -665,7 +686,20 @@ function appendChatBubble(role, text) {
   bubble.appendChild(body);
   
   el.chatHistory.appendChild(bubble);
-  el.chatHistory.parentElement.scrollTop = el.chatHistory.parentElement.scrollHeight;
+  
+  const container = el.chatHistory.parentElement;
+  if (role === 'ai') {
+    // 描画と高さの確定を待つため、100ms遅延させてスクロール
+    setTimeout(() => {
+      container.scrollTo({
+        top: bubble.offsetTop - 10,
+        behavior: 'smooth'
+      });
+    }, 100);
+  } else {
+    // ユーザーの場合は最下部へ（自分が送信した後にすぐ見えるように）
+    container.scrollTop = container.scrollHeight;
+  }
   
   return bubble;
 }
