@@ -78,16 +78,37 @@ The UI supports **seamless Japanese/English switching** — the entire AI pipeli
 
 ## 🤖 Course Concepts Applied
 
-This project applies the following key concepts from the "5-Day AI Agents" course:
+This project applies the following key concepts from the "5-Day AI Agents" course.
+The evaluation criteria require **at least 3 major concepts** — this project covers all 5:
 
-| Concept | Implementation |
-|---|---|
-| **AI Agent** | `Co-Learning Agent` — an AI that autonomously generates step-by-step explanations and extracts structured notes from conversations |
-| **Structured Output** | `<notes>` tag protocol — the AI embeds structured learning notes within its responses, which are then parsed and rendered separately |
-| **System Instruction** | Dynamic system prompts that switch between Japanese and English, controlling agent tone, format, and output length |
-| **Security features** | API keys stored only in `localStorage`; prominent "Clear Key" button for user control; full HTML-escaping of user inputs against XSS attacks |
-| **Deployability** | Zero backend required — runs entirely in the browser with a single `npm run dev` command. Deployable to any static hosting (GitHub Pages, Vercel, etc.) |
-| **Human-AI Co-creation** | Built through pair programming with Antigravity (AI agent), including autonomous Puppeteer E2E testing and self-correction loops |
+### ✅ 1. AI Agent
+The `Co-Learning Agent` is a conversational AI agent powered by the Gemini API (`gemini-2.0-flash`).
+It autonomously:
+- Generates plain-language summaries for each learning section (step-by-step explanation)
+- Responds to user questions in context-aware chat
+- Extracts and structures key insights via a `<notes>` tag protocol, which are rendered in the right pane in real time
+
+### ✅ 2. Built with Antigravity (AI Development Partner)
+This application was developed through **human-AI pair programming with Antigravity**.
+- Tさん (Human UX Designer) defined pedagogical requirements and UX principles
+- Antigravity autonomously set up **Puppeteer E2E browser tests**, captured DOM screenshots, identified uncaught runtime exceptions (e.g., DOMContentLoaded timing issues under ESM), and performed **self-correction loops**
+- The entire development cycle — from initial scaffold to final bug fixes — was a collaborative co-creation process
+
+### ✅ 3. Security Features
+Security was a first-class concern throughout the project:
+- **API Key Safety**: Keys are stored exclusively in the browser's `localStorage` and never sent to any server other than Google's Gemini API
+- **Clear Key Feature**: A prominent red "Clear Key" button lets users delete their credentials at any time (UX-compliant credential management)
+- **XSS Prevention**: All user-generated text inputs are HTML-escaped before rendering to prevent cross-site scripting attacks
+
+### ✅ 4. Deployability
+- **Zero backend required** — the entire app runs client-side in the browser
+- Start instantly with a single command: `npm run dev`
+- Deployable to any static hosting (GitHub Pages, Vercel, Netlify, etc.) with no server configuration
+- No database, no authentication server, no infrastructure to manage
+
+### ✅ 5. Structured Output / System Instruction
+- **Dynamic System Instructions**: The Gemini API system prompt switches between Japanese and English at runtime, controlling the agent's tone, format, word count limits, and output language
+- **Structured Output via `<notes>` protocol**: The AI embeds structured learning notes within its responses using a custom tag (`<notes>...</notes>`), which are parsed client-side and rendered in the notes pane separately from the chat
 
 ---
 
